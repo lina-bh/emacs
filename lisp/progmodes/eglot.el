@@ -538,6 +538,11 @@ under cursor."
           (const :tag "Execute custom commands" :executeCommandProvider)
           (const :tag "Inlay hints" :inlayHintProvider)))
 
+(defcustom eglot-advertise-resource-operations nil
+  "When non-nil, Eglot will advertise that it can carry out file creation,
+renaming and deleting if the server asks it to."
+  :type 'boolean)
+
 (defvar eglot-withhold-process-id nil
   "If non-nil, Eglot will not send the Emacs process id to the language server.
 This can be useful when using docker to run a language server.")
@@ -913,7 +918,12 @@ ACTION is an LSP object of either `CodeAction' or `Command' type."
             :workspace (list
                         :applyEdit t
                         :executeCommand `(:dynamicRegistration :json-false)
-                        :workspaceEdit `(:documentChanges t)
+                        :workspaceEdit
+                        `(:documentChanges
+                          t
+                          ,@(when eglot-advertise-resource-operations
+                              '(:resourceOperations
+                                ["create" "rename" "delete"])))
                         :didChangeWatchedFiles
                         `(:dynamicRegistration
                           ,(if (eglot--trampish-p s) :json-false t))
